@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 import base64
 import binascii
-import json
 
-from src.services.helper_functions import obj_to_bytes
-
+class DecryptionError(Exception):
+    """Raised when a cipher cannot decrypt a given payload."""
+    pass
 
 class Cipher(ABC):
     """
@@ -15,14 +15,13 @@ class Cipher(ABC):
 
     @abstractmethod
     def encrypt(self, payload: bytes) -> str:
-        """Encrypt a Python object into a string representation"""
+        """Encrypt raw bytes into a string representation"""
         pass
 
     @abstractmethod
     def decrypt(self, payload: str) -> bytes:
         """
-        Decrypt an encrypted string back to a Python object.
-        If the input isn't encrypted, it returns unchanged.
+        Decrypt an encrypted string back to raw bytes.
         """
         pass
 
@@ -34,7 +33,9 @@ class B64Cipher(Cipher):
     
     def decrypt(self, payload: str) -> bytes:
         try:
-            decrypted_payload = base64.b64decode(payload)
-            return decrypted_payload
-        except: # This methods of catching unencrypted input could be fine tuned
-            return payload.encode()
+            return base64.b64decode(payload)
+        except (binascii.Error, UnicodeDecodeError, ValueError, TypeError):
+            raise DecryptionError()
+
+        
+       

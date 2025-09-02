@@ -1,33 +1,40 @@
 import json
 from typing import Any
 
-from src.domain.cipher import Cipher
+from src.domain.cipher import Cipher, DecryptionError
 from src.services.helper_functions import obj_to_bytes
 
+ENC_KEY = "enc"
+VAL_KEY = "val"
 
-def encrypt_service(json_payload: dict[str, Any], cipher: Cipher) -> dict[str, str]:
-    """ Encrypt all top-level values of the input dictionary. """
+def encrypt_service(json_payload: dict[str, Any], cipher: Cipher) -> dict[str, Any]:
+    """Encrypt all top-level values and wrap them in a small envelope."""
     out = {}
 
     for k, v in json_payload.items():
-        out[k] = cipher.encrypt(obj_to_bytes(v))
+        out[k] = {
+            ENC_KEY: cipher.__class__.__name__,
+            VAL_KEY: cipher.encrypt(obj_to_bytes(v)),
+        }
 
     return out
 
 def decrypt_service(json_payload: dict[str, Any], cipher: Cipher) -> dict[str, Any]:
-    """ Decrypt all encrypted values of the input dictionary. """
+    """
+    Decrypt only enveloped values that declare this cipher's algorithm.
+    Non-enveloped (unencrypted) values remain unchanged.
+    """
     out = {}
 
     for k, v in json_payload.items():
-        if not isinstance(v, str):
-            # Only string values are passed to the cipher; other types are left as-is.
-            # Detecting whether a string is actually encrypted is the responsibility
-            # of the cipher implementation.
-            # This allows us to safely call .decode() on decrypted bytes.
+        if isinstance(v, dict) and v.get(ENC_KEY) == cipher.__class__.__name__ and VAL_KEY in v:
+            try:
+                out[k] = json.loads(cipher.decrypt(v.get(VAL_KEY)).decode())
+            except DecryptionError:
+                out[k] = v
+        else:
             out[k] = v
-            continue
-
-        out[k] = json.loads(cipher.decrypt(v).decode())
 
     return out
+
 
