@@ -11,6 +11,7 @@ class Cipher(ABC):
     Abstract interface for encryption.
 
     Implementations are responsible for managing any keys or secrets they require.
+    decrypt(self, payload: str) should raise a DecryptionError if it fails (specific to each implementation)
     """
 
     @abstractmethod

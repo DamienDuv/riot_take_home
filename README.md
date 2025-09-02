@@ -29,3 +29,11 @@ Without uv (with venv activated):
 ```
 python -m uvicorn --app-dir src app:app
 ```
+
+### Docker
+
+To run with docker:
+```
+ docker build -t riot_take_home .
+ docker run --rm -it -p 8000:8000 riot_take_home
+```

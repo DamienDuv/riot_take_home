@@ -9,7 +9,7 @@ VAL_KEY = "val"
 
 def encrypt_service(json_payload: dict[str, Any], cipher: Cipher) -> dict[str, Any]:
     """Encrypt all top-level values and wrap them in a small envelope."""
-    out = {}
+    out: dict[str, Any] = {}
 
     for k, v in json_payload.items():
         out[k] = {
@@ -24,10 +24,10 @@ def decrypt_service(json_payload: dict[str, Any], cipher: Cipher) -> dict[str, A
     Decrypt only enveloped values that declare this cipher's algorithm.
     Non-enveloped (unencrypted) values remain unchanged.
     """
-    out = {}
+    out: dict[str, Any]  = {}
 
     for k, v in json_payload.items():
-        if isinstance(v, dict) and v.get(ENC_KEY) == cipher.__class__.__name__ and VAL_KEY in v:
+        if isinstance(v, dict) and v.get(ENC_KEY) == cipher.__class__.__name__ and isinstance(v.get(VAL_KEY), str):
             try:
                 out[k] = json.loads(cipher.decrypt(v.get(VAL_KEY)).decode())
             except DecryptionError:
