@@ -25,3 +25,9 @@ def test_encrypt_invalid_json(client):
 
     r = client.post("/encrypt", content=bad_json, headers={"Content-Type": "application/json"})
     assert r.status_code == 422
+
+def test_decrypt_invalid_json(client):
+    bad_json = '{"name": "damien", "age": 35, "hex": 0xab}'  # not valid
+
+    r = client.post("/decrypt", content=bad_json, headers={"Content-Type": "application/json"})
+    assert r.status_code == 422

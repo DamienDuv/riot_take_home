@@ -14,7 +14,7 @@
       in {
         default = pkgs.mkShell {
           packages = [ 
-            pkgs.python312 
+            pkgs.python312
             pkgs.uv 
             pkgs.fastapi-cli
             ];

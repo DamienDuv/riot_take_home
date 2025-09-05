@@ -23,3 +23,21 @@ def test_verify_fails_on_tampered_payload(client):
     tampered_payload = {"name": "damien", "age": 35, "other": {"alive": False, "size": 178}}
     r = client.post("/verify", json={"signature": sig, "data": tampered_payload})
     assert r.status_code == 400
+
+def test_sign_invalid_json(client):
+    bad_json = '{"name": "damien", "age": 35, "hex": 0xab}'  # not valid
+
+    r = client.post("/sign", content=bad_json, headers={"Content-Type": "application/json"})
+    assert r.status_code == 422
+
+def test_verify_invalid_json(client):
+    bad_json = '{"name": "damien", "age": 35, "hex": 0xab}'  # not valid
+
+    r = client.post("/verify", content=bad_json, headers={"Content-Type": "application/json"})
+    assert r.status_code == 422
+
+def test_verify_malformed_json(client):
+    malformed_json = '{"sig":"abcde", "content":"arbitrary"}'
+
+    r = client.post("/verify", content=malformed_json, headers={"Content-Type": "application/json"})
+    assert r.status_code == 422
