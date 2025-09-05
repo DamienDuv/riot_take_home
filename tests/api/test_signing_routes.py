@@ -1,19 +1,23 @@
-def test_sign_and_verify_match(client):
+import json
+
+
+def test_sign_and_verify_match_with_different_order_payload(client):
     payload = {"name": "damien", "age": 35, "other": {"alive": True, "size": 178}}
 
-    # /sign returns a signature string
+    # Sign the original dict (standard order)
     r = client.post("/sign", json=payload)
     assert r.status_code == 200
-    body = r.json()
-    assert "signature" in body
-    assert isinstance(body["signature"], str)
-    assert body["signature"]  # non-empty
+    sig = r.json()["signature"]
+    assert isinstance(sig, str) and sig != ""
 
-    sig = body["signature"]
-
-    # /verify succeeds (204) with the same payload
-    r2 = client.post("/verify", json={"signature": sig, "data": payload})
-    assert r2.status_code == 204  # No Content
+    # Explicitly serialize with different key order
+    payload_different_order = {"age": 35, "other": {"size": 178, "alive": True}, "name": "damien"}
+    r2 = client.post(
+        "/verify",
+        content=json.dumps({"signature": sig, "data": payload_different_order}),
+        headers={"Content-Type": "application/json"},
+    )
+    assert r2.status_code == 204
 
 
 def test_verify_fails_on_tampered_payload(client):
